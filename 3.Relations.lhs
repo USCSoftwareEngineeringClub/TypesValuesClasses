@@ -51,3 +51,8 @@ This is just to get the interactive panel working:
 >   show _ = "Success!"
 > instance Show (Succ n) where
 >   show _ = "Success"
+
+> instance Show True where
+>   show _ = "'True"
+> instance Show False where
+>   show _ = "'False"

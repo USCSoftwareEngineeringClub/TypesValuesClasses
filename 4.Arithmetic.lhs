@@ -4,7 +4,7 @@ All the stuff we need from before:
 > {-# LANGUAGE FlexibleInstances #-}
 > {-# LANGUAGE FunctionalDependencies #-}
 > {-# LANGUAGE UndecidableInstances #-}
-> import Prelude hiding (even, odd)
+> import Prelude hiding (even, odd, pred)
 > data True
 > data False
 > data Zero
@@ -94,3 +94,51 @@ Try the following in ghci:
 :t add (u::Three) (u::Three)
 
 :t mul (u::Three) (u::Three)
+
+Power
+-----
+Static computations are those performed by the compiler. Dynamic
+computations are run-time computations.
+
+We can illustrate combining these with the power function. The typical
+value-level power function is as follows (with Zero and Succ as
+values, not types):
+
+data Nat
+  = Zero | Succ Nat
+  deriving (Show, Eq)
+
+pow b Zero = one
+pow b (Succ n) = mul b (pow b n)
+
+The static version looks like this:
+
+> type One = Succ Zero
+
+> class Pow a b c | a b -> c where
+>   pow :: a -> b -> c
+
+
+Anything to the zero power is one, and if a ** b = c and a * c = d,
+then a * c = a * a ** b = a ** (b + 1)
+
+> instance                           Pow a Zero One
+> instance (Pow a b c, Mul a c d) => Pow a (Succ b) d
+
+If we use Int for the base, we can ensure the base is calculated at
+runtime while the exponent is determined at compile-time:
+
+> class Pred a b | a -> b -- Predecessor relation
+>   where pred :: a -> b
+> instance Pred (Succ n) n
+
+> class Power n
+>   where power :: Int -> n -> Int
+> instance Power Zero
+>   where power _ _ = 1 -- Anything to the zero is one
+> instance Power n => Power (Succ n)
+>   where power x n = x * power x (pred n)
+
+An example:
+
+power 2 (mul (u :: Three) (u :: Three))
